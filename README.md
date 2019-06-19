@@ -11,7 +11,7 @@ import(
 )
 
 func main() {
-    randError := suberror.RuntimeError //Derive from RuntimeError
+    randError := suberror.RuntimeError.Derive() //Derive from RuntimeError
     err := randError.New("An error")
     log.Println(err.Error()) //Print "An error"
     if err.TypeOf(suberror.RuntimeError) { //match since we derive from RuntimeError
