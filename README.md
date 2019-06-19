@@ -1,6 +1,11 @@
 # Suberror
 A Tree like error handling for golang because i need better Error handling in golang. Give you support to tree like error handling that you can find in C++, C# and Java programming language.
 
+## Installation
+```
+go get github.com/firmanmm/suberror
+```
+
 ## Usage
 ```
 //Derive from RuntimeError
