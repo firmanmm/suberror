@@ -1,7 +1,7 @@
 package suberror
 
 //RuntimeError a global error that is categorized as runtime error
-var RuntimeError = newErrorType()
+var RuntimeError = newBaseErrorType()
 
 //IOError represent any IO related error
 var IOError = RuntimeError.Derive()

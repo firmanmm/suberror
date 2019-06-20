@@ -43,7 +43,7 @@ func TestBaseError(t *testing.T) {
 }
 
 func TestDeriveError(t *testing.T) {
-	testcase := make([]*ErrorType, 100)
+	testcase := make([]ErrorType, 100)
 	testcase[0] = RuntimeError.Derive()
 	for i := 1; i < len(testcase); i++ {
 		testcase[i] = testcase[i-1].Derive()
@@ -61,7 +61,7 @@ func TestDeriveError(t *testing.T) {
 func TestTryCatchLikeError(t *testing.T) {
 	subIOError := IOError.Derive()
 	err := subIOError.New("there was an sub IO error")
-	var res *ErrorType
+	var res ErrorType
 	switch true {
 	case err.TypeOf(NetworkError):
 		res = NetworkError //Should skip
@@ -73,12 +73,12 @@ func TestTryCatchLikeError(t *testing.T) {
 		t.Fatal("non matching error") //Something wrong
 	}
 	if !err.TypeOf(IOError) {
-		t.Errorf("got %v want %v", res, err.errType)
+		t.Errorf("got %v want %v", res.GetCode(), err.GetCode())
 	}
 }
 
 func BenchmarkDeriveError(b *testing.B) {
-	testcase := make([]*ErrorType, b.N)
+	testcase := make([]ErrorType, b.N)
 	testcase[0] = RuntimeError.Derive()
 	for i := 1; i < len(testcase); i++ {
 		testcase[i] = testcase[i-1].Derive()
