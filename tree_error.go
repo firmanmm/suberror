@@ -1,6 +1,7 @@
 package suberror
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -10,9 +11,11 @@ var codeCounter ErrorCode
 //Ex: 1234
 type ErrorCode int
 
+//ErrorType represent error type
 type ErrorType interface {
 	TypeOf(err ErrorType) bool
 	New(message string) Error
+	Newf(message string, args ...interface{}) Error
 	GetCode() ErrorCode
 	Derive() ErrorType
 	getParent() ErrorType
@@ -44,6 +47,11 @@ func (t *BaseErrorType) New(message string) Error {
 	err.errType = t
 	err.message = message
 	return err
+}
+
+//Newf instance of formatted error
+func (t *BaseErrorType) Newf(format string, args ...interface{}) Error {
+	return t.New(fmt.Sprintf(format, args...))
 }
 
 //Derive a new BaseErrorType from this error type
