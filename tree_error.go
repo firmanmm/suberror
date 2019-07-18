@@ -25,20 +25,14 @@ type ErrorType interface {
 type BaseErrorType struct {
 	parent ErrorType
 	code   ErrorCode
+	family map[ErrorCode]ErrorType
 }
 
 //TypeOf check wheter current error is subtype of [err]
 //return true if valid
 func (t *BaseErrorType) TypeOf(err ErrorType) bool {
-	var iter ErrorType
-	iter = t
-	for iter != nil {
-		if iter.GetCode() == err.GetCode() {
-			return true
-		}
-		iter = iter.getParent()
-	}
-	return false
+	_, ok := t.family[err.GetCode()]
+	return ok
 }
 
 //New instance of Error with this given type
@@ -58,6 +52,10 @@ func (t *BaseErrorType) Newf(format string, args ...interface{}) Error {
 func (t *BaseErrorType) Derive() ErrorType {
 	errType := newBaseErrorType()
 	errType.parent = t
+	for i, v := range t.family {
+		errType.family[i] = v
+	}
+	errType.family[t.code] = t
 	return errType
 }
 
@@ -66,6 +64,7 @@ func (t *BaseErrorType) String() string {
 	return strconv.Itoa(int(t.code))
 }
 
+//GetCode return current error code
 func (t *BaseErrorType) GetCode() ErrorCode {
 	return t.code
 }
@@ -78,5 +77,7 @@ func newBaseErrorType() *BaseErrorType {
 	errType := new(BaseErrorType)
 	codeCounter++
 	errType.code = codeCounter
+	errType.family = make(map[ErrorCode]ErrorType)
+	errType.family[codeCounter] = errType
 	return errType
 }
