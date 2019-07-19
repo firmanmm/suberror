@@ -27,3 +27,8 @@ func (b *BaseError) Error() string {
 func (b *BaseError) GetCode() ErrorCode {
 	return b.errType.GetCode()
 }
+
+//String yield string representation
+func (b *BaseError) String() string {
+	return b.message
+}
