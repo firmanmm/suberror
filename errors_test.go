@@ -76,18 +76,3 @@ func TestTryCatchLikeError(t *testing.T) {
 		t.Errorf("got %v want %v", res.GetCode(), err.GetCode())
 	}
 }
-
-func BenchmarkDeriveError(b *testing.B) {
-	testcase := make([]ErrorType, b.N)
-	testcase[0] = RuntimeError.Derive()
-	for i := 1; i < len(testcase); i++ {
-		testcase[i] = testcase[i-1].Derive()
-	}
-
-	for i := 0; i < len(testcase); i++ {
-		if !testcase[i].TypeOf(testcase[0]) {
-			b.Fatalf("testcase %d is not a subtype of %d", 0, i)
-		}
-
-	}
-}
