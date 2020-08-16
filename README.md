@@ -2,7 +2,7 @@
 A Tree like error handling for golang because i need better Error handling in golang. Give you support to tree like error handling that you can find in C++, C# and Java programming language.
 
 ## Installation
-```
+```bash
 go get github.com/firmanmm/suberror
 ```
 
@@ -26,7 +26,7 @@ As you can see here that `suberror` provides a pretty good error handling. Also 
 ## Usage
 Try to run `example/main.go` to see the result
 
-```
+```go
 package main
 
 import (
@@ -78,7 +78,7 @@ func printError(err suberror.Error) {
 
 
 Example of "Try Catch" error handling in golang:
-```
+```go
 subIOError := IOError.Derive()
 err := subIOError.New("there was an sub IO error")
 switch true {
