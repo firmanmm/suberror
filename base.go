@@ -1,5 +1,10 @@
 package suberror
 
+import (
+	"fmt"
+	"runtime/debug"
+)
+
 //RuntimeError a global error that is categorized as runtime error
 var RuntimeError = newBaseErrorType()
 
@@ -7,10 +12,22 @@ var RuntimeError = newBaseErrorType()
 var ClientError = RuntimeError.Derive()
 
 //InternalError represent any error that happen because of server problem
-var InternalError = RuntimeError.Derive()
+//Comes pre setup with a stack trace generated
+var InternalError ErrorType
 
 //IOError represent any IO related error
-var IOError = InternalError.Derive()
+var IOError ErrorType
 
 //NetworkError represent any network related error
-var NetworkError = IOError.Derive()
+var NetworkError ErrorType
+
+func init() {
+	InternalError = RuntimeError.Derive()
+	InternalError.SetPreNewError(func(err Error) {
+		stackTrace := debug.Stack()
+		message := fmt.Sprintf("Error : %s\n%s", err.Error(), string(stackTrace))
+		err.setMessage(message)
+	})
+	IOError = InternalError.Derive()
+	NetworkError = IOError.Derive()
+}

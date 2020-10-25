@@ -11,6 +11,8 @@ var codeCounter ErrorCode
 //Ex: 1234
 type ErrorCode int
 
+type PreErrorTypeFunc func(err Error)
+
 //ErrorType represent error type
 type ErrorType interface {
 	TypeOf(err ErrorType) bool
@@ -19,13 +21,15 @@ type ErrorType interface {
 	GetCode() ErrorCode
 	Derive() ErrorType
 	getParent() ErrorType
+	SetPreNewError(preFunc PreErrorTypeFunc)
 }
 
 //BaseErrorType for handling further error
 type BaseErrorType struct {
-	parent ErrorType
-	code   ErrorCode
-	family map[ErrorCode]ErrorType
+	parent     ErrorType
+	code       ErrorCode
+	preNewFunc PreErrorTypeFunc
+	family     map[ErrorCode]ErrorType
 }
 
 //TypeOf check wheter current error is subtype of [err]
@@ -40,6 +44,9 @@ func (t *BaseErrorType) New(message string) Error {
 	err := new(BaseError)
 	err.errType = t
 	err.message = message
+	if t.preNewFunc != nil {
+		t.preNewFunc(err)
+	}
 	return err
 }
 
@@ -51,6 +58,7 @@ func (t *BaseErrorType) Newf(format string, args ...interface{}) Error {
 //Derive a new BaseErrorType from this error type
 func (t *BaseErrorType) Derive() ErrorType {
 	errType := newBaseErrorType()
+	errType.preNewFunc = t.preNewFunc
 	errType.parent = t
 	for i, v := range t.family {
 		errType.family[i] = v
@@ -71,6 +79,11 @@ func (t *BaseErrorType) GetCode() ErrorCode {
 
 func (t *BaseErrorType) getParent() ErrorType {
 	return t.parent
+}
+
+//SetPreNewError will be executed before the created error returned
+func (t *BaseErrorType) SetPreNewError(preFunc PreErrorTypeFunc) {
+	t.preNewFunc = preFunc
 }
 
 func newBaseErrorType() *BaseErrorType {

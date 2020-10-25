@@ -5,6 +5,7 @@ type Error interface {
 	TypeOf(err ErrorType) bool
 	Error() string
 	GetCode() ErrorCode
+	setMessage(message string)
 }
 
 //BaseError represent an error message
@@ -31,4 +32,8 @@ func (b *BaseError) GetCode() ErrorCode {
 //String yield string representation
 func (b *BaseError) String() string {
 	return b.message
+}
+
+func (b *BaseError) setMessage(message string) {
+	b.message = message
 }

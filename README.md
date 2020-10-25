@@ -24,52 +24,88 @@ ok  	github.com/firmanmm/suberror	9.789s
 As you can see here that `suberror` provides a pretty good error handling. Also deriving from error is not really that bad. Checking from `Leaf` to `Root` tooks only `19.9ns` per operation which is pretty amazing. However, you can also see that deriving error into 100 depth (or inheritance in OOP) tooks `819404ns` which is good enough i think. Especially that it should only happen once at program initialization.
 
 ## Usage
-Try to run `example/main.go` to see the result
+Try to expore [example](example) to for more
 
 ```go
 package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/firmanmm/suberror"
 )
 
 var (
-	RandomError         = suberror.RuntimeError.Derive()
-	BranchOfRandomError = RandomError.Derive()
-	DerivedRandomError  = RandomError.Derive()
+	AccessError      = suberror.ClientError.Derive()
+	TransactionError = suberror.ClientError.Derive()
+	PaymentError     = TransactionError.Derive()
 )
 
 func main() {
-	runtimeError := suberror.RuntimeError.New("A runtime Error")
-	randomError := RandomError.New("A random error")
-	branchError := BranchOfRandomError.New("A brnach error")
-	derivedErr := DerivedRandomError.New("a derived error")
-
-	fmt.Println("Start of RuntimeError")
-	printError(runtimeError)
-	fmt.Println("Start of RandomError")
-	printError(randomError)
-	fmt.Println("Start of BranchOfRandomError")
-	printError(branchError)
-	fmt.Println("Start of DerivedRandomError")
-	printError(derivedErr)
+	err := doBusinessStuff(1, 5)
+	if err != nil {
+		handleError(err)
+		//No Access : Not worth my time
+	}
+	err = doBusinessStuff(5, 10)
+	if err != nil {
+		handleError(err)
+		//2020/10/25 14:47:34 Insufficient Fund
+	}
+	err = doBusinessStuff(101, 10)
+	if err != nil {
+		handleError(err)
+		//2020/10/25 14:47:34 Balance Too high
+	}
+	err = doBusinessStuff(35, 11)
+	if err != nil {
+		handleError(err)
+		/*
+			Error : End of Transaction error
+			goroutine 1 [running]:
+			runtime/debug.Stack(0xc00000e2c0, 0xc000092030, 0x5904c0)
+					c:/go/src/runtime/debug/stack.go:24 +0xa4
+			github.com/firmanmm/suberror.init.0.func1(0x4fee60, 0xc000004560)
+					D:/Projects/Rendoru/OpenSource/suberror/base.go:27 +0x2d
+			github.com/firmanmm/suberror.(*BaseErrorType).New(0xc00006c3f0, 0x4e5aed, 0x18, 0x4bb040, 0xc000046210)
+					D:/Projects/Rendoru/OpenSource/suberror/tree_error.go:48 +0xb2
+			main.doBusinessStuff(0x23, 0xb, 0x4fee60, 0xc000004540)
+					D:/Projects/Rendoru/OpenSource/suberror/example/request/main.go:62 +0xc9
+			main.main()
+					D:/Projects/Rendoru/OpenSource/suberror/example/request/main.go:29 +0xb1
+		*/
+	}
 }
 
-func printError(err suberror.Error) {
-	if err.TypeOf(suberror.RuntimeError) {
-		fmt.Printf("Yay i'am a RuntimeError error %s\n", err.Error())
+func handleError(err suberror.Error) {
+	switch true {
+	case err.TypeOf(AccessError):
+		fmt.Println("No Access : " + err.Error())
+	case err.TypeOf(TransactionError):
+		//In this case we want to log instead of print the error
+		log.Println(err.Error())
+	default:
+		fmt.Println(err.Error())
 	}
-	if err.TypeOf(RandomError) {
-		fmt.Printf("Yay i'am a RandomError error %s\n", err.Error())
+}
+
+func doBusinessStuff(money, cost int) suberror.Error {
+	//Assume that we can only process business deal when there is atleast 10 coin involved
+	if cost < 10 {
+		return AccessError.New("Not worth my time")
 	}
-	if err.TypeOf(BranchOfRandomError) {
-		fmt.Printf("Yay i'am a BranchOfRandomError error %s\n", err.Error())
+	//We need to make sure if they have enough coin or not
+	if money < cost {
+		return TransactionError.New("Insufficient Fund")
 	}
-	if err.TypeOf(DerivedRandomError) {
-		fmt.Printf("Yay i'am a DerivedRandomError error %s\n", err.Error())
+
+	//Let's also assume that we can't accept payment if their balance is higher than 10 times the cost
+	if money > cost*10 {
+		return PaymentError.New("Balance Too high")
 	}
+	//Assume the transaction is buggy
+	return suberror.InternalError.New("End of Transaction error")
 }
 
 ```
