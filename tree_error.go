@@ -28,7 +28,7 @@ type ErrorType interface {
 	Newf(message string, args ...interface{}) Error
 	GetCode() ErrorCode
 	Derive() ErrorType
-	DeriveWithCode(code uint) (ErrorType, error)
+	DeriveWithCode(code uint) ErrorType
 	getParent() ErrorType
 	SetPreNewError(preFunc PreErrorTypeFunc)
 }
@@ -92,13 +92,13 @@ func (t *BaseErrorType) Derive() ErrorType {
 }
 
 //Derive a new BaseErrorType from this error type
-func (t *BaseErrorType) DeriveWithCode(code uint) (ErrorType, error) {
+func (t *BaseErrorType) DeriveWithCode(code uint) ErrorType {
 	errType := newBaseErrorType()
 	pickedCode := ErrorCode(code)
 	codeCounterMutex.Lock()
 	defer codeCounterMutex.Unlock()
 	if _, ok := codeMap[pickedCode]; ok {
-		return nil, errors.New("Code already used")
+		panic(errors.New("Code already used"))
 	}
 	codeMap[pickedCode] = true
 	errType.code = pickedCode
@@ -109,7 +109,7 @@ func (t *BaseErrorType) DeriveWithCode(code uint) (ErrorType, error) {
 	}
 	errType.family[t.code] = t
 	errType.family[pickedCode] = errType
-	return errType, nil
+	return errType
 }
 
 //String represent struct as string of error code

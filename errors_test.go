@@ -53,11 +53,21 @@ func TestDeriveError(t *testing.T) {
 func TestDeriveWithCode(t *testing.T) {
 	simpleErrType := RuntimeError.Derive()
 	assert.Equal(t, ErrorCode(3), simpleErrType.GetCode())
-	customErrorCodeType, err := RuntimeError.DeriveWithCode(4)
-	assert.NoError(t, err)
-	assert.Equal(t, ErrorCode(4), customErrorCodeType.GetCode())
-	_, err = RuntimeError.DeriveWithCode(4)
-	assert.Error(t, err)
+	func() {
+		defer func() {
+			err := recover()
+			assert.Nil(t, err)
+		}()
+		customErrorCodeType := RuntimeError.DeriveWithCode(4)
+		assert.Equal(t, ErrorCode(4), customErrorCodeType.GetCode())
+	}()
+	func() {
+		defer func() {
+			err := recover()
+			assert.Error(t, err.(error))
+		}()
+		RuntimeError.DeriveWithCode(4)
+	}()
 	simpleErrType3 := RuntimeError.Derive()
 	assert.Equal(t, ErrorCode(5), simpleErrType3.GetCode())
 }
