@@ -1,43 +1,35 @@
 package suberror
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBaseError(t *testing.T) {
 	runtimeErr := RuntimeError.New("system crashed")
-	expected := "system crashed"
-	if runtimeErr.Error() != expected {
-		t.Errorf("got %v want %v", runtimeErr, expected)
-	}
 	if !runtimeErr.TypeOf(RuntimeError) {
 		t.Error("runtimeErr is not a subtype of RuntimeError")
 	}
-
-	ioErr := IOError.New("there is an IO error")
-	expected = "there is an IO error"
-	if ioErr.Error() != expected {
-		t.Errorf("got %v want %v", ioErr, expected)
-	}
+	ioErrType := InternalError.Derive()
+	ioErr := ioErrType.New("there is an IO error")
 	if !ioErr.TypeOf(RuntimeError) {
 		t.Error("ioErr is not a subtype of RuntimeError")
 	}
-	if !ioErr.TypeOf(IOError) {
+	if !ioErr.TypeOf(ioErrType) {
 		t.Error("ioErr is not a subtype of IOError")
 	}
 
-	netErr := NetworkError.New("there is an Network error")
-	expected = "there is an Network error"
-	if netErr.Error() != expected {
-		t.Errorf("got %v want %v", ioErr, expected)
-	}
+	netErrType := ioErrType.Derive()
+	netErr := netErrType.New("there is an Network error")
 	if !netErr.TypeOf(RuntimeError) {
 		t.Error("netErr is not a subtype of RuntimeError")
 	}
-	if !netErr.TypeOf(IOError) {
+	if !netErr.TypeOf(ioErrType) {
 		t.Error("netErr is not a subtype of IOError")
 	}
-	if !netErr.TypeOf(NetworkError) {
+	if !netErr.TypeOf(netErrType) {
 		t.Error("netErr is not a subtype of NetworkError")
 	}
 }
@@ -58,21 +50,35 @@ func TestDeriveError(t *testing.T) {
 	}
 }
 
+func TestDeriveWithCode(t *testing.T) {
+	simpleErrType := RuntimeError.Derive()
+	assert.Equal(t, ErrorCode(3), simpleErrType.GetCode())
+	customErrorCodeType, err := RuntimeError.DeriveWithCode(4)
+	assert.NoError(t, err)
+	assert.Equal(t, ErrorCode(4), customErrorCodeType.GetCode())
+	_, err = RuntimeError.DeriveWithCode(4)
+	assert.Error(t, err)
+	simpleErrType3 := RuntimeError.Derive()
+	assert.Equal(t, ErrorCode(5), simpleErrType3.GetCode())
+}
+
 func TestTryCatchLikeError(t *testing.T) {
-	subIOError := IOError.Derive()
+	ioErrType := InternalError.Derive()
+	netErrType := ioErrType.Derive()
+	subIOError := ioErrType.Derive()
 	err := subIOError.New("there was an sub IO error")
 	var res ErrorType
 	switch true {
-	case err.TypeOf(NetworkError):
-		res = NetworkError //Should skip
-	case err.TypeOf(IOError):
-		res = IOError //Should get
+	case err.TypeOf(netErrType):
+		fmt.Println("Im Network error")
+	case err.TypeOf(ioErrType):
+		fmt.Println("Im IOError error")
 	case err.TypeOf(RuntimeError):
-		res = RuntimeError //Should not get
+		fmt.Println("Im Runtime error")
 	default:
 		t.Fatal("non matching error") //Something wrong
 	}
-	if !err.TypeOf(IOError) {
+	if !err.TypeOf(ioErrType) {
 		t.Errorf("got %v want %v", res.GetCode(), err.GetCode())
 	}
 }
