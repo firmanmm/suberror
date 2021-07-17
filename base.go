@@ -6,8 +6,9 @@ import (
 )
 
 var (
+	_BASE_ERROR = newBaseErrorType()
 	//RuntimeError a global error that is categorized as runtime error
-	RuntimeError = newBaseErrorType()
+	RuntimeError = _BASE_ERROR.Derive()
 
 	//ClientError represent any error due to client input
 	ClientError = RuntimeError.Derive()

@@ -51,25 +51,21 @@ func TestDeriveError(t *testing.T) {
 }
 
 func TestDeriveWithCode(t *testing.T) {
-	simpleErrType := RuntimeError.Derive()
-	assert.Equal(t, ErrorCode(3), simpleErrType.GetCode())
 	func() {
 		defer func() {
 			err := recover()
 			assert.Nil(t, err)
 		}()
-		customErrorCodeType := RuntimeError.DeriveWithCode(4)
-		assert.Equal(t, ErrorCode(4), customErrorCodeType.GetCode())
+		customErrorCodeType := RuntimeError.DeriveWithCode(400)
+		assert.Equal(t, ErrorCode(400), customErrorCodeType.GetCode())
 	}()
 	func() {
 		defer func() {
 			err := recover()
 			assert.Error(t, err.(error))
 		}()
-		RuntimeError.DeriveWithCode(4)
+		RuntimeError.DeriveWithCode(400)
 	}()
-	simpleErrType3 := RuntimeError.Derive()
-	assert.Equal(t, ErrorCode(5), simpleErrType3.GetCode())
 }
 
 func TestTryCatchLikeError(t *testing.T) {
@@ -91,4 +87,14 @@ func TestTryCatchLikeError(t *testing.T) {
 	if !err.TypeOf(ioErrType) {
 		t.Errorf("got %v want %v", res.GetCode(), err.GetCode())
 	}
+}
+
+func TestSimple(t *testing.T) {
+	err := InternalError.New("Internal")
+	assert.False(t, err.TypeOf(ClientError))
+	assert.True(t, err.TypeOf(RuntimeError))
+
+	err = ClientError.New("Client")
+	assert.False(t, err.TypeOf(InternalError))
+	assert.True(t, err.TypeOf(RuntimeError))
 }

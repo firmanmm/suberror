@@ -134,6 +134,5 @@ func (t *BaseErrorType) SetPreNewError(preFunc PreErrorTypeFunc) {
 func newBaseErrorType() *BaseErrorType {
 	errType := new(BaseErrorType)
 	errType.family = make(map[ErrorCode]ErrorType)
-	errType.family[codeCounter] = errType
 	return errType
 }
